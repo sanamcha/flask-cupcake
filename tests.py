@@ -3,11 +3,9 @@ from unittest import TestCase
 from app import app
 from models import db, Cupcake
 
-# Use test database and don't clutter tests with SQL
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///cupcakes_test'
-app.config['SQLALCHEMY_ECHO'] = False
 
-# Make Flask errors be real errors, rather than HTML pages with error info
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///cupcakes_db'
+app.config['SQLALCHEMY_ECHO'] = False
 app.config['TESTING'] = True
 
 db.drop_all()
@@ -18,14 +16,14 @@ CUPCAKE_DATA = {
     "flavor": "TestFlavor",
     "size": "TestSize",
     "rating": 5,
-    "image": "http://test.com/cupcake.jpg"
+    "image": "http://image.com/cupcake.jpg"
 }
 
 CUPCAKE_DATA_2 = {
     "flavor": "TestFlavor2",
     "size": "TestSize2",
     "rating": 10,
-    "image": "http://test.com/cupcake2.jpg"
+    "image": "http://image.com/cupcake2.jpg"
 }
 
 
@@ -62,7 +60,7 @@ class CupcakeViewsTestCase(TestCase):
                         "flavor": "TestFlavor",
                         "size": "TestSize",
                         "rating": 5,
-                        "image": "http://test.com/cupcake.jpg"
+                        "image": "http://image.com/cupcake.jpg"
                     }
                 ]
             })
@@ -80,7 +78,7 @@ class CupcakeViewsTestCase(TestCase):
                     "flavor": "TestFlavor",
                     "size": "TestSize",
                     "rating": 5,
-                    "image": "http://test.com/cupcake.jpg"
+                    "image": "http://image.com/cupcake.jpg"
                 }
             })
 
@@ -93,7 +91,7 @@ class CupcakeViewsTestCase(TestCase):
 
             data = resp.json
 
-            # don't know what ID we'll get, make sure it's an int & normalize
+        
             self.assertIsInstance(data['cupcake']['id'], int)
             del data['cupcake']['id']
 
@@ -102,7 +100,7 @@ class CupcakeViewsTestCase(TestCase):
                     "flavor": "TestFlavor2",
                     "size": "TestSize2",
                     "rating": 10,
-                    "image": "http://test.com/cupcake2.jpg"
+                    "image": "http://image.com/cupcake2.jpg"
                 }
             })
 
@@ -114,8 +112,8 @@ class CupcakeViewsTestCase(TestCase):
             cupcake = {
                 "flavor": "TestFlavorUpdate",
                 "size": "TestSizeUpdate",
-                "rating": 6,
-                "image": "http://test.com/cupcakeupdate.jpg"
+                "rating": 7,
+                "image": "http://image.com/cupcakeupdate.jpg"
             }
             resp = client.patch(url, json=cupcake)
 
@@ -127,8 +125,8 @@ class CupcakeViewsTestCase(TestCase):
                     "id": self.cupcake.id,
                     "flavor": "TestFlavorUpdate",
                     "size": "TestSizeUpdate",
-                    "rating": 6,
-                    "image": "http://test.com/cupcakeupdate.jpg"
+                    "rating": 7,
+                    "image": "http://image.com/cupcakeupdate.jpg"
                 }
             })
 
@@ -144,8 +142,14 @@ class CupcakeViewsTestCase(TestCase):
 
     def test_get_cupcake_404(self):
         with app.test_client() as client:
-            url = "/api/cupcakes/100"
+            url = "/api/cupcakes/99"
             resp = client.get(url)
+            self.assertEqual(resp.status_code, 404)
+
+    def test_delete_cupcake_404(self):
+        with app.test_client() as client:
+            url = "/api/cupcakes/99"
+            resp = client.delete(url)
             self.assertEqual(resp.status_code, 404)
 
     def test_patch_cupcake_404(self):
@@ -154,15 +158,10 @@ class CupcakeViewsTestCase(TestCase):
             cupcake = {
                 "flavor": "TestFlavorUpdate",
                 "size": "TestSizeUpdate",
-                "rating": 6,
-                "image": "http://test.com/cupcakeupdate.jpg"
+                "rating": 7,
+                "image": "http://image.com/cupcakeupdate.jpg"
             }
             resp = client.patch(url, json=cupcake)
 
             self.assertEqual(resp.status_code, 404)
 
-    def test_delete_cupcake_404(self):
-        with app.test_client() as client:
-            url = "/api/cupcakes/100"
-            resp = client.delete(url)
-            self.assertEqual(resp.status_code, 404)

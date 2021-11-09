@@ -6,18 +6,18 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///cupcakes_db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'mysecretcupcakes'
-
+app.config['SECRET_KEY'] = '1234567abcdefgh'
 connect_db(app)
 
 @app.route('/')
-def index_page():
+def home_page():
+
     return render_template('index.html')
 
 @app.route('/api/cupcakes')
 def list_cupcakes():
-    all_cupcakes = [cupcake.serialize() for cupcake in Cupcake.query.all()]
-    return jsonify(cupcakes=all_cupcakes)
+    cupcakes = [cupcake.serialize() for cupcake in Cupcake.query.all()]
+    return jsonify(cupcakes=cupcakes)
 
 @app.route('/api/cupcakes/<int:id>')
 def get_cupcake(id):
@@ -26,13 +26,14 @@ def get_cupcake(id):
 
 @app.route('/api/cupcakes', methods=['POST'])
 def create_cupcake():
-    data = request.json
-    new_cupcake = Cupcake(flavor=data['flavor'],
-                          size=data['size'],
-                          rating=data['rating'],
-                          image=data['image'] or None)
+    
+    new_cupcake = Cupcake(flavor=request.json['flavor'],
+                          size=request.json['size'],
+                          rating=request.json['rating'],
+                          image=request.json['image'] or None)
     db.session.add(new_cupcake)
     db.session.commit()
+
     response_json = jsonify(cupcake=new_cupcake.serialize())
     return (response_json, 201)
 
@@ -43,6 +44,7 @@ def update_cupcake(id):
     cupcake.size = request.json.get('size', cupcake.size)
     cupcake.rating = request.json.get('rating', cupcake.rating)
     cupcake.image= request.json.get('image', cupcake.image)
+    
     db.session.commit()
     return jsonify(cupcake=cupcake.serialize())
 
